@@ -45,14 +45,12 @@ def PartialCorrelation(price, window=1000, lag=10, fillnans = True):
         answ[f'PACF for lag {i}'] = correlation
         prices_copy -= correlation * shifted
 
-
     return answ
 
 
 
 #Cointegration
 def Cointegration(asks_amounts, bids_amounts, window=10, fillnans=True, method = 'total volume', depth = 25):
-
 
     if method == 'by level':
 
@@ -77,9 +75,6 @@ def Cointegration(asks_amounts, bids_amounts, window=10, fillnans=True, method =
             b1[f'LVL {i}'] = b_1
             b0[f'LVL {i}'] = b_0
 
-
-
-
     elif method == 'total volume':
         y = asks_amounts.sum(axis = 1)
         X = bids_amounts.sum(axis = 1)
@@ -102,7 +97,7 @@ def Cointegration(asks_amounts, bids_amounts, window=10, fillnans=True, method =
 #Adaptive Logistic Regression
 def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, bid_highest_price=None,
                    window=10, lag=1, method='binary', side = None, depth = 6):
-
+    #Сам логрег
     def logregfunc(X, xtest, y, method='binary'):
         lr = LogisticRegression(solver = 'newton-cg')
         lr.fit(X,y)
@@ -121,8 +116,6 @@ def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, 
             ret = np.array([lr.predict_proba(xtest)[0][0], lr.predict_proba(xtest)[0][1]])
 
         return ret
-
-
 
     # Для аска
     if side == 'ask':
@@ -171,8 +164,6 @@ def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, 
                 answers.append(preds)
             answ = pd.DataFrame(answers, columns=['Ask price+', 'Ask price=', 'Ask price-'])
 
-
-
     # Для бида
     if side == 'bid':
         BIDS = bids_amounts
@@ -220,3 +211,46 @@ def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, 
                 answers.append(preds)
             answ = pd.DataFrame(answers, columns=['Bid price+','Bid price=','Bid price-'])
     return answ
+
+
+
+#Order Book Internal Imbalance median (For ask and bid sides)
+def Internal_imbalance_median_ask(asks_amounts, asks_prices):
+    
+    median_amounts = asks_amounts.median(axis = 1)
+    residuals = median_amounts
+    proportions = pd.DataFrame(index = asks_amounts.index, columns = asks_amounts.columns)
+    
+    for col in asks_amounts.columns:
+        proportions[col] = pd.DataFrame([residuals, asks_amounts[col]]).min()
+        residuals = residuals - proportions[col] 
+    
+    Pn = 0
+    for col_amount, col_price in list(zip(proportions.columns, asks_prices.columns)):
+        Pn += proportions[col_amount] * asks_prices[col_price]
+    
+    lowest_ask_price = asks_prices[asks_prices.columns[0]]
+    IMB_a = (Pn/lowest_ask_price - 1) * 10000
+    
+    return IMB_a
+
+
+
+def Internal_imbalance_median_bid(bids_amounts, bids_prices):
+    
+    median_amounts = bids_amounts.median(axis = 1)
+    residuals = median_amounts
+    proportions = pd.DataFrame(index = bids_amounts.index, columns = bids_amounts.columns)
+    
+    for col in bids_amounts.columns:
+        proportions[col] = pd.DataFrame([residuals, bids_amounts[col]]).min()
+        residuals = residuals - proportions[col] 
+    
+    Pn = 0
+    for col_amount, col_price in list(zip(proportions.columns, bids_prices.columns)):
+        Pn += proportions[col_amount] * bids_prices[col_price]
+    
+    highest_bid_price = bids_prices[bids_prices.columns[0]]
+    IMB_b = (highest_bid_price/Pn - 1) * 10000
+    
+    return IMB_b
