@@ -21,13 +21,13 @@ def ADL(price, amount, window=10, fillnans = True):
     return ADL
 
 
+
 #Average directional index
 def ADX(price, window=14, fillnans = True):
 
     L = price.rolling(window).min()
     H = price.rolling(window).max()
     CL = price
-
 
     plusM = H - H.shift(1)
     minusM = L.shift(1) - L
@@ -49,8 +49,8 @@ def ADX(price, window=14, fillnans = True):
     if fillnans:
         ADX.fillna(method = 'ffill', inplace = True)
 
-
     return ADX
+
 
 
 #Chande Momentum oscillator
@@ -73,16 +73,21 @@ def CMO(price, window=10, fillnans = True):
     return CMO
 
 
+
 #Momentum
 def Momentum(price):
     MOM = price - price.shift(1)
+    
     return MOM
+
 
 
 #Rate of Change
 def ROC(price, window=10):
     ROC = (price - price.shift(window)) / price.shift(window) * 100
+    
     return ROC
+
 
 
 #Relative Strength Index
@@ -109,6 +114,7 @@ def RSI(price, window=140, fillnans = True):
     return RSI
 
 
+
 #Stochastic Relative Strength Index
 def StochasticRSI(price, window_stochastic=140, window_rsi=140, fillnans = True):
     rsi = RSI(price, window_rsi)
@@ -122,6 +128,7 @@ def StochasticRSI(price, window_stochastic=140, window_rsi=140, fillnans = True)
         StochRSI.fillna(method = 'ffill', inplace = True)
 
     return StochRSI
+
 
 
 #Linear regression line
@@ -143,6 +150,5 @@ def LinearRegressionLine(price, window_learning=10, window_forecasting=1, fillna
     if fillnans:
         b1.fillna(method = 'ffill', inplace = True)
         b0.fillna(method = 'ffill', inplace = True)
-
 
     return b0, b1
