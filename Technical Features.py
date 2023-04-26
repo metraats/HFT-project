@@ -152,3 +152,66 @@ def LinearRegressionLine(price, window_learning=10, window_forecasting=1, fillna
         b0.fillna(method = 'ffill', inplace = True)
 
     return b0, b1
+
+
+
+#Realized Volatility
+def RealizedVolatility(price, window=10, fillnans = True):
+    
+    v = (price - price.shift(1)) * (price - price.shift(1))
+    Realized_Volatility = v.rolling(window).mean()
+    
+    if fillnans:
+        Realized_Volatility.fillna(method = 'ffill', inplace = True)
+        
+    return Realized_Volatility
+
+
+
+#Realized Kernel
+def RealizedKernel(price, horizon=7, window=10, kernel = 'Bartlett'):
+    
+    def k(x, kernel):
+        if kernel == 'Bartlett':
+            return 1-x
+        
+
+    returns = price - price.shift(1)
+    
+    shifts_covs = pd.DataFrame(index=price.index)
+    for i in range(1,horizon+1):
+        shifts_covs[f'h={i}'] = returns.rolling(window).cov(returns.shift(i)) * window * k(x=(i-1)/horizon, kernel=kernel)
+    for i in range(-horizon,0):
+        shifts_covs[f'h={i}'] = returns.rolling(window).cov(returns.shift(i)) * window * k(x=(-i-1)/horizon, kernel=kernel)
+    
+    
+    variance = price.rolling(window).var()
+    
+    K = variance + shifts_covs.sum(axis=1)
+    
+    return K
+
+
+
+#Realized Bipower Variation
+def RealizedBipowerVariation(price, window=10, fillnans = True):
+    
+    delta = (price-price.shift(1)) * (price-price.shift(1)).shift(1)
+    t = delta.rolling(window).mean()
+    
+    RealizedBipowerVolatility = t * np.pi * 0.5
+    
+    if fillnans:
+        RealizedBipowerVolatility.fillna(method = 'ffill', inplace = True)
+        
+    return RealizedBipowerVolatility
+
+
+
+#Jump Variation
+def JumpVariation(price, window=10, fillnans = True):
+    
+    JumpVariation = RealizedVolatility(price, window=window, fillnans = fillnans) - RealizedBipowerVariation(price,window=window, fillnans = fillnans)
+    return JumpVariation
+
+
