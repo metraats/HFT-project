@@ -254,3 +254,14 @@ def Internal_imbalance_median_bid(bids_amounts, bids_prices):
     IMB_b = (highest_bid_price/Pn - 1) * 10000
     
     return IMB_b
+
+
+
+#Trade Flow Imbalance
+def TFI(asks_amounts, bids_amounts):
+    
+    Buy_volume = bids_amounts.sum(axis = 1)
+    Sell_volume = asks_amounts.sum(axis = 1)
+    TFI = Buy_volume - Sell_volume
+    
+    return TFI
