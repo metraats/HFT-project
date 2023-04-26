@@ -215,3 +215,38 @@ def JumpVariation(price, window=10, fillnans = True):
     return JumpVariation
 
 
+
+#Past Returns
+def PastReturns(price):
+    PRET = price.pct_change() * 10000
+    PRET.mean()
+    
+    return PRET
+
+
+
+#Trade Flow Imbalance
+def TFI(asks_amounts, bids_amounts):
+    
+    Buy_volume = bids_amounts.sum(axis = 1)
+    Sell_volume = asks_amounts.sum(axis = 1)
+    TFI = Buy_volume - Sell_volume
+    
+    return TFI
+
+
+
+#Mean Divirgence
+def MeanDivirgence(prices_1, prices_2, window = 10, fillnans = True):
+    
+    d = prices_1/prices_2 - 1
+    d[d == np.inf] = np.nan
+    d[d == -np.inf] = np.nan
+    
+    DIV = d - d.rolling(window).mean()
+    
+    if fillnans:
+        DIV.fillna(method = 'ffill', inplace = True)
+    
+    return DIV
+
