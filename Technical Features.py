@@ -239,3 +239,124 @@ def MeanDivirgence(prices_1, prices_2, window = 10, fillnans = True):
     
     return DIV
 
+
+
+#Awesome Oscillator
+def AwesomeOscillator(price, block = 10, window_big = 34, window_small = 5):
+    H = price.rolling(block).max()
+    L = price.rolling(block).min()
+    
+    AO = (H+L).rolling(window_small*block).mean()/2 - (H+L).rolling(window_big*block).mean()/2
+    
+    return AO
+
+
+
+#Accelerator Oscillator
+def AcceleratorOscillator(price, AO_window = 5, block = 10, window_big = 34, window_small = 5):
+    AO = AwesomeOscillator(price=price, block = block, window_big = window_big, window_small = window_small)
+    
+    return AO - AO.rolling(AO_window).mean()
+
+
+
+#Average directional movement index rating
+def ADXR(price, window = 14, fillnans = True):
+    adx = ADX(price=price, window=window, fillnans = fillnans)
+    
+    return (adx + adx.shift(1))/2
+
+
+
+#Williams Alligator Indicator
+def AlligatorIndicator(price, block=10, w_jaw=13, w_teeth=8, w_lips=5):
+    H = price.rolling(block).max()
+    L = price.rolling(block).min()
+    
+    jaw = (H+L).rolling(block*w_jaw).mean()/2
+    teeth = (H+L).rolling(block*w_teeth).mean()/2
+    lips = (H+L).rolling(block*w_lips).mean()/2
+    
+    return jaw, teeth, lips
+
+
+
+#Absolute price oscillator
+def APO(price, block=10, small_window=5, big_window=13):
+    H = price.rolling(block).max()
+    L = price.rolling(block).min()
+    
+    M = (H+L)/2
+    APO = M.ewm(small_window*block).mean() - M.ewm(big_window*block).mean()
+    
+    return APO
+
+
+
+#Average True Range
+def ATR(price, block=10, window=14):
+    L = price.rolling(block*window).min()
+    H = price.rolling(block*window).max()
+    CL = price
+    
+    TR = pd.concat([H-L, abs(H-CL.shift(1)), abs(L-CL.shift(1))], axis = 1).max(axis = 1)
+    ATR = TR.ewm(alpha = 1/(block*window), adjust=False).mean()
+    
+    return ATR
+
+
+
+#Bollinger Bands
+def Bollinger(price, block=10, window=20, k=2):
+    
+    BB_std = price.rolling(block*window).std()
+    BB_middle = price.rolling(block*window).mean()
+    BB_lower = BB_middle - k*BB_std
+    BB_upper = BB_middle + k*BB_std
+    
+    return BB_middle, BB_upper, BB_lower
+
+
+
+#Ichimoku clouds
+def IchimokuClouds(price, block=10, window_convline=9, window_baseline=26, window_leadingspanb=52):
+    
+    ConversionLine = (price.rolling(block*window_convline).max() + price.rolling(block*window_convline).min())/2
+    Baseline = (price.rolling(block*window_baseline).max() + price.rolling(block*window_baseline).min())/2
+    LeadingSpanA = (ConversionLine+Baseline)/2
+    LeadingSpanB = (price.rolling(block*window_leadingspanb).max() + price.rolling(block*window_leadingspanb).min())/2
+    LaggingSpan = price.shift(block*window_baseline)
+    
+    return ConversionLine, Baseline, LeadingSpanA, LeadingSpanB, LaggingSpan
+
+
+
+#Chaikin Oscillator
+def ChaikinOscillator(price, volumes, block=10, ema1 = 3, ema2 = 10):
+    
+    L = price.rolling(block).min()
+    H = price.rolling(block).max()
+    V = volumes.rolling(block).sum()
+    
+    N = (2*price - L - H)/(H - L)
+    M = N * V
+    ADL = M + M.shift(1)
+    CO = ADL.ewm(ema1).mean() - ADL.ewm(ema2).mean()
+    
+    return CO
+
+
+
+#Chandelier Exit
+def ChandelierExit(price, block=10, window=22, k=3):
+    
+    L = price.rolling(block*window).min()
+    H = price.rolling(block*window).max()
+    
+    ChandelierLong = H - k * ATR(price, block=block, window=window)
+    ChandelierShort = L + k * ATR(price, block=block, window=window)
+    
+    return ChandelierLong, ChandelierShort
+
+
+
