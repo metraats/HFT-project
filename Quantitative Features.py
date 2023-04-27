@@ -162,7 +162,7 @@ def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, 
                 else:
                     preds = logregfunc(X, xtest, y, method='triple')
                 answers.append(preds)
-            answ = pd.DataFrame(answers, columns=['Ask price+', 'Ask price=', 'Ask price-'])
+            answ = pd.DataFrame(answers, columns=['Ask price-', 'Ask price=', 'Ask price+'])
 
     # Для бида
     if side == 'bid':
@@ -201,15 +201,15 @@ def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, 
                 xtest = BIDS.iloc[i:i+1]
 
                 if sum(abs(y)) == 0:
-                    preds = 0
+                    preds = np.array([0,1,0])
                 elif sum(y) == window:
-                    preds = 1
+                    preds = np.array([0,0,1])
                 elif sum(y) == -window:
-                    preds = -1
+                    preds = np.array([1,0,0])
                 else:
                     preds = logregfunc(X, xtest, y, method='triple')
                 answers.append(preds)
-            answ = pd.DataFrame(answers, columns=['Bid price+','Bid price=','Bid price-'])
+            answ = pd.DataFrame(answers, columns=['Bid price-','Bid price=','Bid price+'])
     return answ
 
 
