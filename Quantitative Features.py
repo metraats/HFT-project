@@ -5,7 +5,6 @@ from sklearn.linear_model import LogisticRegression
 
 #Order Book Imbalance
 def OBI(asks_amounts, bids_amounts):
-
     Va = asks_amounts.mean(axis = 1)
     Vb = bids_amounts.mean(axis = 1)
 
@@ -31,7 +30,6 @@ def Autocorrelation(price, window=1000, lag=10, fillnans = True, delete_outliers
 
 #Partial Correlation (can be used not only for price time series)
 def PartialCorrelation(price, window=1000, lag=10, fillnans = True):
-
     prices_copy = price.copy()
     answ = pd.DataFrame(index = price.index)
 
@@ -51,7 +49,6 @@ def PartialCorrelation(price, window=1000, lag=10, fillnans = True):
 
 #Cointegration
 def Cointegration(asks_amounts, bids_amounts, window=10, fillnans=True, method = 'total volume', depth = 25):
-
     if method == 'by level':
 
         b1 = pd.DataFrame(index = ASK.index)
@@ -216,7 +213,6 @@ def AdaptiveLogreg(asks_amounts=None, bids_amounts=None, ask_lowest_price=None, 
 
 #Order Book Internal Imbalance median (For ask and bid sides)
 def Internal_imbalance_median_ask(asks_amounts, asks_prices):
-    
     median_amounts = asks_amounts.median(axis = 1)
     residuals = median_amounts
     proportions = pd.DataFrame(index = asks_amounts.index, columns = asks_amounts.columns)
@@ -237,7 +233,6 @@ def Internal_imbalance_median_ask(asks_amounts, asks_prices):
 
 
 def Internal_imbalance_median_bid(bids_amounts, bids_prices):
-    
     median_amounts = bids_amounts.median(axis = 1)
     residuals = median_amounts
     proportions = pd.DataFrame(index = bids_amounts.index, columns = bids_amounts.columns)
@@ -259,7 +254,6 @@ def Internal_imbalance_median_bid(bids_amounts, bids_prices):
 
 #Trade Flow Imbalance
 def TFI(asks_amounts, bids_amounts):
-    
     Buy_volume = bids_amounts.sum(axis = 1)
     Sell_volume = asks_amounts.sum(axis = 1)
     TFI = Buy_volume - Sell_volume
