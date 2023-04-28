@@ -14,7 +14,7 @@ def OBI(asks_amounts, bids_amounts):
 
 
 #Autocorrelation (can be used not only for price time series)
-def Autocorrelation(price, window=1000, lag=10, fillnans = True, delete_outliers=True):
+def Autocorrelation(price, window=100, lag=10, fillnans = True, delete_outliers=True):
     shifted = price.shift(lag)
     correlation = price.rolling(window).corr(shifted)
 
@@ -29,7 +29,7 @@ def Autocorrelation(price, window=1000, lag=10, fillnans = True, delete_outliers
 
 
 #Partial Correlation (can be used not only for price time series)
-def PartialCorrelation(price, window=1000, lag=10, fillnans = True):
+def PartialCorrelation(price, window=100, lag=10, fillnans = True):
     prices_copy = price.copy()
     answ = pd.DataFrame(index = price.index)
 
@@ -48,7 +48,7 @@ def PartialCorrelation(price, window=1000, lag=10, fillnans = True):
 
 
 #Cointegration
-def Cointegration(asks_amounts, bids_amounts, window=10, fillnans=True, method = 'total volume', depth = 25):
+def Cointegration(asks_amounts, bids_amounts, window=10, fillnans=True, method = 'total volume', depth = 1):
     if method == 'by level':
 
         b1 = pd.DataFrame(index = ASK.index)
