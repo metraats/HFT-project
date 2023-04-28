@@ -294,13 +294,16 @@ def APO(price, block=10, small_window=5, big_window=13):
 
 
 #Average True Range
-def ATR(price, block=10, window=14):
+def ATR(price, block=10, window=14, Normalized = False):
     L = price.rolling(block*window).min()
     H = price.rolling(block*window).max()
     CL = price
     
     TR = pd.concat([H-L, abs(H-CL.shift(1)), abs(L-CL.shift(1))], axis = 1).max(axis = 1)
     ATR = TR.ewm(alpha = 1/(block*window), adjust=False).mean()
+    
+    if Normalized:
+        return ATR/CL*100
     
     return ATR
 
@@ -359,4 +362,83 @@ def ChandelierExit(price, block=10, window=22, k=3):
     return ChandelierLong, ChandelierShort
 
 
+
+#Center of gravity
+def COG(price, block = 10, n = 1):
+    
+    W = price.copy()
+    
+    for i in range(1, block*n):
+        W += price.shift(i) * (i+1)
+        
+    return - W / price.rolling(block*n).sum()
+
+
+
+#Double exponential moving average
+def DEMA(price, block=10, window=20):
+    
+    L = price.rolling(block).min()
+    H = price.rolling(block).max()
+    M = (H+L)/2
+    
+    DEMA = 2 * M.ewm(block*window).mean() - M.ewm(block*window).mean().ewm(block*window).mean()
+    return DEMA
+
+
+
+#Detrended price oscillator
+def DPO(price, block=10, window=20):
+    
+    A = price.shift(block*window//2 + 1)
+    B = price.rolling(block*window).mean()
+    
+    return A-B
+
+
+
+#Weighted Moving Average
+def WMA(price, block = 10, window = 10):
+        
+    W = price.copy() * block*window
+    d = 1
+    
+    for i in range(1, block*window):
+        W += price.shift(i) * (block*window - i)
+        d += (i+1)
+        
+    return W/d
+
+
+
+#Hull Moving Average
+def HullMA(price, block=10, window=10):
+    
+    n = block * window
+    WMA1 = WMA(price.shift(n//2), block=block, window = window)
+    WMA2 = WMA(price.shift(n), block=block, window = window)
+    
+    HMA = WMA(price = 2*WMA1-WMA2, block = int(np.sqrt(block)), window = int(np.sqrt(window)))
+    
+    return HMA
+
+
+
+#Internal bar strength
+def IBS(price, block=10):
+    
+    L = price.rolling(block).min()
+    H = price.rolling(block).max()
+    
+    return (price - L)/(H - L)
+
+
+
+#Percentage price oscillator
+def PPO(price, block=10, small_window=12, big_window=26):
+    
+    MACD = price.ewm(small_window*block).mean() - price.ewm(big_window*block).mean()
+    PPO = MACD/price.ewm(big_window*block).mean()*100
+    
+    return PPO
 
