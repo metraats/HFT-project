@@ -3,15 +3,15 @@ import pandas as pd
 
 
 #AccumulationDistributionLine
-def ADL(price, amount, window=10, fillnans = True):
+def ADL(price, amount, block=10, fillnans = True):
     C = price.copy()
-    L = price.rolling(window).min()
-    H = price.rolling(window).max()
+    L = price.rolling(block).min()
+    H = price.rolling(block).max()
 
     MoneyFlowMultiplier = (2*C-L-H)/(H-L)
     BlockPeriodVolume = price
 
-    MoneyFlowVolumet = MoneyFlowMultiplier * amount.rolling(window).mean()
+    MoneyFlowVolumet = MoneyFlowMultiplier * amount.rolling(block).mean()
     ADL = MoneyFlowVolumet.cumsum()
 
     if fillnans:
@@ -22,9 +22,9 @@ def ADL(price, amount, window=10, fillnans = True):
 
 
 #Average directional index
-def ADX(price, window=14, fillnans = True):
-    L = price.rolling(window).min()
-    H = price.rolling(window).max()
+def ADX(price, block = 10, window=14, fillnans = True):
+    L = price.rolling(block).min()
+    H = price.rolling(block).max()
     CL = price.copy()
 
     plusM = H - H.shift(1)
@@ -38,10 +38,10 @@ def ADX(price, window=14, fillnans = True):
 
     TR = pd.concat([H, CL.shift(1)], axis = 1).max(axis = 1) - pd.concat([L, CL.shift(1)], axis = 1).min(axis = 1)
 
-    plusDI = (plusDM/TR).rolling(window-1).mean().shift(1) * (window-1)/window + (plusDM/TR)/window
-    minusDI = (minusDM/TR).rolling(window-1).mean().shift(1) * (window-1)/window + (minusDM/TR)/window
+    plusDI = (plusDM/TR).rolling(block*window-1).mean().shift(1) * (window*block-1)/window + (plusDM/TR)/window
+    minusDI = (minusDM/TR).rolling(block*window-1).mean().shift(1) * (block*window-1)/window + (minusDM/TR)/window
 
-    ADX = 100 * (abs(plusDI - minusDI)/(plusDI + minusDI)).rolling(window-1).mean().shift(1)*(window-1)/window + 100*(abs(plusDI - minusDI)/(plusDI + minusDI))/window
+    ADX = 100 * (abs(plusDI - minusDI)/(plusDI + minusDI)).rolling(block*window-1).mean().shift(1)*(block*window-1)/window + 100*(abs(plusDI - minusDI)/(plusDI + minusDI))/window
 
     if fillnans:
         ADX.fillna(method = 'ffill', inplace = True)
@@ -51,7 +51,7 @@ def ADX(price, window=14, fillnans = True):
 
 
 #Chande Momentum oscillator
-def CMO(price, window=10, fillnans = True):
+def CMO(price, block=10, window=19, fillnans = True):
     updays = (price / (price.shift(1)) > 1) * 1
     downdays = (price / (price.shift(1)) < 1) * 1
     zerodays = (price / (price.shift(1)) == 1) * 1
@@ -59,8 +59,8 @@ def CMO(price, window=10, fillnans = True):
     CL_up = (price - (price.shift(1))) * updays
     CL_down = -(price - (price.shift(1))) * downdays
 
-    Su = CL_up.rolling(window).sum()
-    Sd = CL_down.rolling(window).sum()
+    Su = CL_up.rolling(window*block).sum()
+    Sd = CL_down.rolling(window*block).sum()
 
     CMO = 100 * (Su - Sd)/(Su + Sd)
 
@@ -80,15 +80,15 @@ def Momentum(price):
 
 
 #Rate of Change
-def ROC(price, window=10):
-    ROC = (price - price.shift(window)) / price.shift(window) * 100
+def ROC(price, block=10, window=12):
+    ROC = (price - price.shift(block*window)) / price.shift(block*window) * 100
     
     return ROC
 
 
 
 #Relative Strength Index
-def RSI(price, window=140, fillnans = True):
+def RSI(price, block=10, window=14, fillnans = True):
     CL = price - price.shift(1)
 
     updays = ((CL - CL.shift(1)) > 0) * 1
@@ -98,8 +98,8 @@ def RSI(price, window=140, fillnans = True):
     CL_up = CL * updays
     CL_down = -CL * downdays
 
-    AG = CL_up.rolling(window).sum()
-    AL = CL_down.rolling(window).sum()
+    AG = CL_up.rolling(block*window).sum()
+    AL = CL_down.rolling(block*window).sum()
 
     Relative_strength = AG/AL
 
@@ -113,11 +113,11 @@ def RSI(price, window=140, fillnans = True):
 
 
 #Stochastic Relative Strength Index
-def StochasticRSI(price, window_stochastic=140, window_rsi=140, fillnans = True):
-    rsi = RSI(price, window_rsi)
+def StochasticRSI(price, block=10, window=14, rsi_block = 10, fillnans = True):
+    rsi = RSI(price, block=10, window=14)
 
-    RSI_max = rsi.rolling(window_stochastic).max()
-    RSI_min = rsi.rolling(window_stochastic).min()
+    RSI_max = rsi.rolling(block*window*rsi_block).max()
+    RSI_min = rsi.rolling(block*window*rsi_block).min()
 
     StochRSI = (rsi - RSI_min)/(RSI_max - RSI_min)
 
@@ -153,10 +153,9 @@ def LinearRegressionLine(price, window_learning=10, window_forecasting=1, fillna
 
 
 #Realized Volatility
-def RealizedVolatility(price, window=10, fillnans = True):
-    
+def RealizedVolatility(price, block=10, window=10, fillnans = True):
     v = (price - price.shift(1)) * (price - price.shift(1))
-    Realized_Volatility = v.rolling(window).mean()
+    Realized_Volatility = v.rolling(block*window).mean()
     
     if fillnans:
         Realized_Volatility.fillna(method = 'ffill', inplace = True)
@@ -167,12 +166,10 @@ def RealizedVolatility(price, window=10, fillnans = True):
 
 #Realized Kernel
 def RealizedKernel(price, horizon=7, window=10, kernel = 'Bartlett'):
-    
     def k(x, kernel):
         if kernel == 'Bartlett':
             return 1-x
         
-
     returns = price - price.shift(1)
     
     shifts_covs = pd.DataFrame(index=price.index)
@@ -181,9 +178,7 @@ def RealizedKernel(price, horizon=7, window=10, kernel = 'Bartlett'):
     for i in range(-horizon,0):
         shifts_covs[f'h={i}'] = returns.rolling(window).cov(returns.shift(i)) * window * k(x=(-i-1)/horizon, kernel=kernel)
     
-    
     variance = price.rolling(window).var()
-    
     K = variance + shifts_covs.sum(axis=1)
     
     return K
@@ -191,10 +186,9 @@ def RealizedKernel(price, horizon=7, window=10, kernel = 'Bartlett'):
 
 
 #Realized Bipower Variation
-def RealizedBipowerVariation(price, window=10, fillnans = True):
-    
+def RealizedBipowerVariation(price, block=10, window=10, fillnans = True):
     delta = (price-price.shift(1)) * (price-price.shift(1)).shift(1)
-    t = delta.rolling(window).mean()
+    t = delta.rolling(block*window).mean()
     
     RealizedBipowerVolatility = t * np.pi * 0.5
     
@@ -206,9 +200,9 @@ def RealizedBipowerVariation(price, window=10, fillnans = True):
 
 
 #Jump Variation
-def JumpVariation(price, window=10, fillnans = True):
+def JumpVariation(price, block=10, window=10, fillnans = True):
+    JumpVariation = RealizedVolatility(price, block=block, window=window, fillnans = fillnans) - RealizedBipowerVariation(price, block=block, window=window, fillnans = fillnans)
     
-    JumpVariation = RealizedVolatility(price, window=window, fillnans = fillnans) - RealizedBipowerVariation(price,window=window, fillnans = fillnans)
     return JumpVariation
 
 
@@ -223,12 +217,12 @@ def PastReturns(price):
 
 
 #Mean Divirgence
-def MeanDivirgence(prices_1, prices_2, window = 10, fillnans = True):
+def MeanDivirgence(prices_1, prices_2, block=10, window = 10, fillnans = True):
     d = prices_1/prices_2 - 1
     d[d == np.inf] = np.nan
     d[d == -np.inf] = np.nan
     
-    DIV = d - d.rolling(window).mean()
+    DIV = d - d.rolling(window*block).mean()
     
     if fillnans:
         DIV.fillna(method = 'ffill', inplace = True)
@@ -257,8 +251,8 @@ def AcceleratorOscillator(price, AO_window = 5, block = 10, window_big = 34, win
 
 
 #Average directional movement index rating
-def ADXR(price, window = 14, fillnans = True):
-    adx = ADX(price=price, window=window, fillnans = fillnans)
+def ADXR(price, block=10, window = 14, fillnans = True):
+    adx = ADX(price=price, block=block, window=window, fillnans = fillnans)
     
     return (adx + adx.shift(1))/2
 
