@@ -4,8 +4,7 @@ import pandas as pd
 
 #AccumulationDistributionLine
 def ADL(price, amount, window=10, fillnans = True):
-
-    C = price
+    C = price.copy()
     L = price.rolling(window).min()
     H = price.rolling(window).max()
 
@@ -24,10 +23,9 @@ def ADL(price, amount, window=10, fillnans = True):
 
 #Average directional index
 def ADX(price, window=14, fillnans = True):
-
     L = price.rolling(window).min()
     H = price.rolling(window).max()
-    CL = price
+    CL = price.copy()
 
     plusM = H - H.shift(1)
     minusM = L.shift(1) - L
@@ -39,7 +37,6 @@ def ADX(price, window=14, fillnans = True):
     minusDM = minusM * minusMindicator
 
     TR = pd.concat([H, CL.shift(1)], axis = 1).max(axis = 1) - pd.concat([L, CL.shift(1)], axis = 1).min(axis = 1)
-
 
     plusDI = (plusDM/TR).rolling(window-1).mean().shift(1) * (window-1)/window + (plusDM/TR)/window
     minusDI = (minusDM/TR).rolling(window-1).mean().shift(1) * (window-1)/window + (minusDM/TR)/window
@@ -133,7 +130,7 @@ def StochasticRSI(price, window_stochastic=140, window_rsi=140, fillnans = True)
 
 #Linear regression line
 def LinearRegressionLine(price, window_learning=10, window_forecasting=1, fillnans = True):
-    X_train = price
+    X_train = price.copy()
     y_train = price.shift(-window_forecasting)
 
     X_mean = X_train.rolling(window_learning).mean()
@@ -227,7 +224,6 @@ def PastReturns(price):
 
 #Mean Divirgence
 def MeanDivirgence(prices_1, prices_2, window = 10, fillnans = True):
-    
     d = prices_1/prices_2 - 1
     d[d == np.inf] = np.nan
     d[d == -np.inf] = np.nan
@@ -297,7 +293,7 @@ def APO(price, block=10, small_window=5, big_window=13):
 def ATR(price, block=10, window=14, Normalized = False):
     L = price.rolling(block*window).min()
     H = price.rolling(block*window).max()
-    CL = price
+    CL = price.copy()
     
     TR = pd.concat([H-L, abs(H-CL.shift(1)), abs(L-CL.shift(1))], axis = 1).max(axis = 1)
     ATR = TR.ewm(alpha = 1/(block*window), adjust=False).mean()
@@ -365,7 +361,6 @@ def ChandelierExit(price, block=10, window=22, k=3):
 
 #Center of gravity
 def COG(price, block = 10, n = 1):
-    
     W = price.copy()
     
     for i in range(1, block*n):
@@ -377,7 +372,6 @@ def COG(price, block = 10, n = 1):
 
 #Double exponential moving average
 def DEMA(price, block=10, window=20):
-    
     L = price.rolling(block).min()
     H = price.rolling(block).max()
     M = (H+L)/2
@@ -389,7 +383,6 @@ def DEMA(price, block=10, window=20):
 
 #Detrended price oscillator
 def DPO(price, block=10, window=20):
-    
     A = price.shift(block*window//2 + 1)
     B = price.rolling(block*window).mean()
     
@@ -398,8 +391,7 @@ def DPO(price, block=10, window=20):
 
 
 #Weighted Moving Average
-def WMA(price, block = 10, window = 10):
-        
+def WMA(price, block = 10, window = 10):    
     W = price.copy() * block*window
     d = 1
     
@@ -413,7 +405,6 @@ def WMA(price, block = 10, window = 10):
 
 #Hull Moving Average
 def HullMA(price, block=10, window=10):
-    
     n = block * window
     WMA1 = WMA(price.shift(n//2), block=block, window = window)
     WMA2 = WMA(price.shift(n), block=block, window = window)
