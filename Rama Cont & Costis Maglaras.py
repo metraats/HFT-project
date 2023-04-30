@@ -149,3 +149,24 @@ def PriceVolatility_withOF(asks_amounts, bids_amounts, time, basis_point_price, 
     sigma2 = np.pi * (basis_point_price**2) * (v**2) * lamdba / Df
     
     return sigma2 ** 0.5
+
+
+
+#Total LOB volume
+def Volume(asks_amounts, bids_amounts):
+    
+    return asks_amounts.sum(axis=1) + bids_amounts.sum(axis=1)
+
+
+
+#Spreads
+def Spread(asks_prices, bids_prices):
+    
+    return asks_prices[asks_prices.columns[0]] - bids_prices[bids_prices.columns[0]]
+
+
+
+#Liquidity at best price
+def BestPriceLiquidity(asks_amounts, bids_amounts):
+    
+    return asks_amounts[asks_amounts.columns[0]], bids_amounts[bids_amounts.columns[0]]
