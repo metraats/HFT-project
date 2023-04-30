@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
 
-
+'''
+FROM RAMA CONT
+'''
 
 #Randomly generating new 1lvl queue when the previous one is depleted
 def OBSecondLevelRand(bids_2lvl, asks_2lvl, horizon = 10, window=100):
@@ -150,7 +152,9 @@ def PriceVolatility_withOF(asks_amounts, bids_amounts, time, basis_point_price, 
     
     return sigma2 ** 0.5
 
-
+'''
+FROM COSTIS MAGLARAS
+'''
 
 #Total LOB volume
 def Volume(asks_amounts, bids_amounts):
