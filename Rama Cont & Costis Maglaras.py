@@ -159,7 +159,7 @@ FROM COSTIS MAGLARAS
 #Total LOB volume
 def Volume(asks_amounts, bids_amounts):
     
-    return asks_amounts.sum(axis=1) + bids_amounts.sum(axis=1)
+    return asks_amounts.sum(axis=1), bids_amounts.sum(axis=1)
 
 
 
@@ -174,3 +174,22 @@ def Spread(asks_prices, bids_prices):
 def BestPriceLiquidity(asks_amounts, bids_amounts):
     
     return asks_amounts[asks_amounts.columns[0]], bids_amounts[bids_amounts.columns[0]]
+
+
+
+#Share of orders on each level of LOB
+def LOBdistribution(asks_amounts, bids_amounts):
+    total_a, total_b = Volume(asks_amounts, bids_amounts)
+    
+    dict_a = {}
+    for i, name in enumerate(asks_amounts.columns):
+        dict_a[name] = 'ask share lvl '+str(i)
+        
+    dict_b = {}
+    for i, name in enumerate(bids_amounts.columns):
+        dict_b[name] = 'bid share lvl '+str(i)
+        
+    ask = asks_amounts.divide(total_a,  axis=0).rename(columns = dict_a)
+    bid = bids_amounts.divide(total_b,  axis=0).rename(columns = dict_b)
+    
+    return ask, bid
