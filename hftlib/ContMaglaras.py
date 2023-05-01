@@ -6,11 +6,11 @@ FROM RAMA CONT
 '''
 
 #Randomly generating new 1lvl queue when the previous one is depleted
-def OBSecondLevelRand(bids_2lvl, asks_2lvl, horizon = 10, window=100):
+def LOBSecondLevelRand(asks_2lvl, bids_2lvl, horizon = 10, window=10):
     bids_preds = bids_2lvl.rolling(window).apply(lambda x: x.sample(1))
     asks_preds = asks_2lvl.rolling(window).apply(lambda x: x.sample(1))
 
-    return bids_preds.shift(horizon), asks_preds.shift(horizon)
+    return pd.concat([asks_preds.shift(horizon), bids_preds.shift(horizon)], axis=1)
 
 
 
@@ -18,26 +18,33 @@ def OBSecondLevelRand(bids_2lvl, asks_2lvl, horizon = 10, window=100):
 def OrderFlow(asks_amounts, bids_amounts):
     updates_asks = pd.DataFrame(index = asks_amounts.index)
     updates_bids = pd.DataFrame(index = bids_amounts.index)
+    
+    try:
+        for i, col in enumerate(asks_amounts.columns):
+            updates_asks[f'ask {i} change'] = asks_amounts[col] - asks_amounts[col].shift(1)
 
-    for i, col in enumerate(asks_amounts.columns):
-        updates_asks[f'ask {i} change'] = asks_amounts[col] - asks_amounts[col].shift(1)
-
-    for i, col in enumerate(bids_amounts.columns):
-        updates_bids[f'bid {i} change'] = bids_amounts[col] - bids_amounts[col].shift(1)
+        for i, col in enumerate(bids_amounts.columns):
+            updates_bids[f'bid {i} change'] = bids_amounts[col] - bids_amounts[col].shift(1)
+    except:
+        updates_asks = asks_amounts - asks_amounts.shift(1)
+        updates_bids = bids_amounts - bids_amounts.shift(1)
 
     return updates_asks, updates_bids
 
 
 
 #Heavy Traffic Approximation
-def HeavyTrafficApproximation(asks_amounts, bids_amounts, level = 0, t = 10):
+def HeavyTrafficApproximation(asks_amounts, bids_amounts, level = 0, t = 1000):
     ask_updates, bid_updates = OrderFlow(asks_amounts, bids_amounts)
-    ask_updates = ask_updates[f'level {level} change']
-    bid_updates = bid_updates[f'level {level} change']
-
+    try:
+        ask_updates = ask_updates[f'ask {level} change']
+        bid_updates = bid_updates[f'bid {level} change']
+    except:
+        pass
+    
     qa_tn = ask_updates.rolling(t).sum()
     qb_tn = bid_updates.rolling(t).sum()
-
+    
     return qa_tn/(t ** 0.5), qb_tn/(t ** 0.5)
 
 
@@ -66,17 +73,14 @@ def OrderIntervals(amounts, time, method = 'datetime'):
 #lambda = N_arrivals / Sum(arrival intervals). Measure of intensity: larger lambda -> more intensive
 def extractlambda(amounts, time, window=1000):
     obi = OrderIntervals(amounts, time)
-    T = obi[(obi == 0).shift(-1).fillna(False)]
-
-    seq = T.rolling(window).mean()
-
-    seq = seq.reindex(index = np.arange(max(seq.index)+1))
+    
+    seq = obi.rolling(window).mean()
     seq.fillna(method='ffill', inplace = True)
-
+    
     lamdba = 1/seq
     lamdba[lamdba == np.inf] = np.nan
     lamdba[lamdba == -np.inf] = np.nan
-
+    
     return lamdba
 
 
@@ -106,20 +110,20 @@ def Spitzer_tail(asks_amounts, bids_amounts, window=100):
 
 
 #Probability of next price to increase. General case.
-def P_up(asks_amounts, bids_amounts, time, window=100, window_lambda=10000):
+def P_up(asks_amounts, bids_amounts, time, window=100, window_lambda=1000):
     p, va, vb = corr_OF(asks_amounts, bids_amounts, window, return_vars=True)
     lambda_a = extractlambda(asks_amounts, time, window_lambda)
     lambda_b = extractlambda(bids_amounts, time, window_lambda)
-
+    
     ask = asks_amounts.sum(axis=1)
     bid = bids_amounts.sum(axis=1)
-
+    
     y = ask/(lambda_a**0.5)/va
     x = bid/(lambda_b**0.5)/vb
-
+    
     num = np.arctan(((1+p)/(1-p))**0.5 * (y-x)/(y+x))
     den = 2 * np.arctan(((1+p)/(1-p))**0.5)
-
+    
     return 1/2 - num/den
 
 
